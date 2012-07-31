@@ -3,3 +3,9 @@ bin/
 .gitignore
 .project
 .settings/org.eclipse.jdt.core.prefs
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
