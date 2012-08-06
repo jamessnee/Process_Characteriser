@@ -55,7 +55,7 @@ public class FTrace_Input implements InputData_Interface{
 	}
 	
 	@Override
-	public TraceEntry[] get_all_trace_entries() {
+	public TraceEntry[] get_all_trace_entries(String process_name) {
 		//Get the trace number for each line in the file
 		
 		

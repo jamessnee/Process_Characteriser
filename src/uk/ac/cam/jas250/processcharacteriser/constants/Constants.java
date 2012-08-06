@@ -14,6 +14,11 @@ public final class Constants {
 	public static final String FILE_PATH = "../my_file.txt";
 	
 	/*
+	 * Filter for a certain process
+	 */
+	public static final String PROCESS_FILTER = "";
+	
+	/*
 	 * The size of the window to use
 	 */
 	public static final int WINDOW_SIZE = 5;

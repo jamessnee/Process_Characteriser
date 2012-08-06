@@ -6,6 +6,7 @@ import uk.ac.cam.jas250.processcharacteriser.constants.Constants;
 import uk.ac.cam.jas250.processcharacteriser.input.FTrace_Input;
 import uk.ac.cam.jas250.processcharacteriser.input.InputData_Interface;
 import uk.ac.cam.jas250.processcharacteriser.input.SystemTap_Input;
+import uk.ac.cam.jas250.processcharacteriser.models.TraceEntry;
 
 public class Main {
 
@@ -22,9 +23,18 @@ public class Main {
 			e.printStackTrace();
 		}
 		
-		//Iterate through the objects in timestamp order
+		TraceEntry[] trace = data_input.get_all_trace_entries(Constants.PROCESS_FILTER);
 		
-		//Get the next 'n' objects and add them to the following array
+		//Iterate through the objects in timestamp order
+		for(int i=0;i<trace.length;i++){
+			TraceEntry current_entry = trace[i];
+			TraceEntry[] followers = new TraceEntry[Constants.WINDOW_SIZE];
+			//'Walk' forwards and fill the followers array
+			for(int j=0;j<Constants.WINDOW_SIZE;j++)
+				if(i+j<trace.length-1)
+					followers[j] = trace[i+j];
+			current_entry.setFollowingEntries(followers);
+		}
 	}
 
 }

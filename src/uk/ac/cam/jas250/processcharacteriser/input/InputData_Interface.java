@@ -28,5 +28,5 @@ public interface InputData_Interface {
 	/*
 	 * Return the trace as an array of trace entry objects
 	 */
-	public TraceEntry[] get_all_trace_entries();
+	public TraceEntry[] get_all_trace_entries(String process_name);
 }
