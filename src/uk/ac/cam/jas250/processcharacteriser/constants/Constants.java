@@ -6,6 +6,7 @@
 
 package uk.ac.cam.jas250.processcharacteriser.constants;
 
+@Deprecated
 public final class Constants {
 	
 	/*
