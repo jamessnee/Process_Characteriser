@@ -54,7 +54,7 @@ public class FTrace_Input implements InputData_Interface{
 					//System call
 					String parentsyscall = timearr[1];
 					parentsyscall = parentsyscall.trim();
-					String syscall = parentsyscall.split("<-")[1];
+					String syscall = parentsyscall.split("<-")[0].trim();
 					current_entry.setFunctionName(syscall);
 					
 					entries.add(current_entry);

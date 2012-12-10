@@ -28,110 +28,122 @@ public class Characteriser {
 		
 		TraceEntry[] trace = null;
 		try{
-			trace = data_input.get_all_trace_entries(config);
+			trace = data_input.get_all_trace_entries(config); // Read in all of the trace entries
 		}catch(FileNotFoundException e){
 			e.printStackTrace();
 		}
 		
+		// Split up the entries into followers for the correct window size
 		int window_size = Integer.parseInt(config.get("WINDOW_SIZE"));
-		//Iterate through the objects in time-stamp order
 		for(int i=0;i<trace.length;i++){
 			TraceEntry current_entry = trace[i];
-			//TraceEntry[] followers = new TraceEntry[window_size];
 			ArrayList<TraceEntry> followers = new ArrayList<TraceEntry>();
-			//'Walk' forwards and fill the followers array
 			for(int j=0;j<window_size;j++)
-				if(i+j+1<trace.length-1)
-					//followers[j] = trace[i+j+1];
-					followers.add(trace[i+j+1]);
-			//current_entry.setFollowingEntries(followers);
-			current_entry.add_following_entries(followers);
+				if(i+j+1<trace.length)
+					followers.add(trace[i+j+1].copy());
+			current_entry.setFollowingEntries(followers);
 		}
 		
-		System.out.println("Collating the trace...");
-		ArrayList<TraceEntry> collated_list = collate_trace_entries(trace);
+//		System.out.println("List after splitting:");
+//		for(int i=0;i<trace.length;i++){
+//			System.out.println(trace[i]);
+//		}
+//		System.out.println("\n");
 		
-		System.out.println("Collating the trace signitures...");
-		collated_list = collate_trace_signiture(collated_list);
+		ArrayList<TraceEntry> col_trace = collate_into_list(trace);
+//		System.out.println("List after collating:");
+//		for(TraceEntry ent : col_trace)
+//			System.out.println(ent);
 		
+		//OUTPUT
 		System.out.println("Writing out the trace");
-		output_characterised_trace(config.get("OUTPUT_FILE_PATH"), collated_list);
+		boolean debug = (config.get("DEBUG").equals("YES")) ? true : false;
+		boolean output_enabled = (config.get("OUTPUT_ENABLED").equals("YES")) ? true : false;
+		output_characterised_trace(config.get("OUTPUT_FILE_PATH"), col_trace,debug, output_enabled);
 		
 		System.out.println("Finished characterising the "+config.get("PROCESS_FILTER")+" process");
 	}
 	
-	private ArrayList<TraceEntry> collate_trace_signiture(ArrayList<TraceEntry> trace){
-		ArrayList<TraceEntry> collated_trace = new ArrayList<TraceEntry>();
-		for(TraceEntry curr_entry : trace){
-			ArrayList<ArrayList<TraceEntry>> followers = curr_entry.getFollowingEntries();
-			for(int i=0; i<followers.size();i++){
-				
-			}
-		}
+	private ArrayList<TraceEntry> collate_into_list(TraceEntry[] trace){
+		ArrayList<TraceEntry> trace_list = new ArrayList<TraceEntry>(Arrays.asList(trace));
+		ArrayList<TraceEntry> collated_list = new ArrayList<TraceEntry>();		
 		
-		return collated_trace;
-	}
-	
-	private ArrayList<TraceEntry> collate_trace_entries(TraceEntry[] trace){
-		ArrayList<TraceEntry>collated_list = new ArrayList<TraceEntry>();
-		ArrayList<TraceEntry>uncol_trace = new ArrayList<TraceEntry>(Arrays.asList(trace));
-		
-		for(int i=0;i<uncol_trace.size();i++){
-			TraceEntry entry = uncol_trace.get(i);
-			for(int j=i+1;j<uncol_trace.size();j++){//<- look at the rest of the list
-				TraceEntry lookahead_entry = uncol_trace.get(j);
-				if(entry.getFunctionName().equals(lookahead_entry.getFunctionName())){//<- The functions match
-					ArrayList<ArrayList<TraceEntry>> followers_to_add = lookahead_entry.getFollowingEntries();
-					for(ArrayList<TraceEntry>followers : followers_to_add)
-						entry.add_following_entries(followers);
-					uncol_trace.remove(lookahead_entry);
+		for(TraceEntry ent : trace_list){
+			boolean in_list = false;
+			for(TraceEntry n_ent : collated_list){
+				if(compare_entries(ent, n_ent)){
+					in_list = true;
+					break;
 				}
 			}
-			collated_list.add(entry);
+			if(!in_list){
+				collated_list.add(ent);
+				in_list = false;
+			}
 		}
 		return collated_list;
+	}
+	
+	private boolean compare_entries(TraceEntry entry1, TraceEntry entry2){
+		ArrayList<TraceEntry>followers1 = entry1.getFollowingEntries();
+		ArrayList<TraceEntry>followers2 = entry2.getFollowingEntries();
+		
+		if(followers1.size()!=followers2.size())
+			return false;
+		
+		for(int i=0;i<followers1.size();i++){
+			if(!followers1.get(i).getFunctionName().equals(followers2.get(i).getFunctionName()))
+				return false;
+		}
+		return true;
 	}
 	
 	/*
 	 * Trace output format:
 	 * functionName:-follower1,follower2,...followerN,-FunctionName...
 	 */
-	public void output_characterised_trace(String file_path, ArrayList<TraceEntry> trace){
+	public void output_characterised_trace(String file_path, ArrayList<TraceEntry> trace, boolean debug, boolean output_enabled){
 		BufferedWriter bw = null;
-		try {
-			bw = new BufferedWriter(new FileWriter(new File(file_path),false));
-		} catch (IOException e) {
-			System.out.println("Couldn't open the output file");
-			e.printStackTrace();
-			return;
+		
+		if(output_enabled){
+			try {
+				bw = new BufferedWriter(new FileWriter(new File(file_path),false));
+			} catch (IOException e) {
+				System.out.println("Couldn't open the output file");
+				e.printStackTrace();
+				return;
+			}
 		}
 		
 		for(TraceEntry entry : trace){
 			String line = "";
 			line+=entry.getFunctionName();
 			line+=":";
-			ArrayList<ArrayList<TraceEntry>> followers = entry.getFollowingEntries();
-			for(ArrayList<TraceEntry>follower_list : followers){
-				line+="-";
-				for(TraceEntry follower_entry : follower_list){
-					line+=follower_entry.getFunctionName()+",";
-				}
+			ArrayList<TraceEntry> follower_list = entry.getFollowingEntries();
+			for(TraceEntry follower_entry : follower_list){
+				line+=follower_entry.getFunctionName()+",";
 			}
 			line+="\n";
-			try{
-				bw.write(line);
-			}catch(IOException e){
-				System.out.println("Couldn't write to the output file");
-				e.printStackTrace();
+			System.out.println(line);
+			
+			if(output_enabled){
+				try{
+					bw.write(line);
+				}catch(IOException e){
+					System.out.println("Couldn't write to the output file");
+					e.printStackTrace();
+				}
 			}
 		}
 		
-		try {
-			bw.flush();
-			bw.close();
-		} catch (IOException e) {
-			System.out.println("Couldn't close the output file");
-			e.printStackTrace();
+		if(bw!=null){
+			try {
+				bw.flush();
+				bw.close();
+			} catch (IOException e) {
+				System.out.println("Couldn't close the output file");
+				e.printStackTrace();
+			}
 		}
 		
 	}

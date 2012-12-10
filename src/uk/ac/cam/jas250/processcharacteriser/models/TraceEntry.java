@@ -5,7 +5,7 @@ import java.util.ArrayList;
 public class TraceEntry {
 	private String processName;
 	private String functionName;
-	private ArrayList<ArrayList<TraceEntry>> followingEntries;
+	private ArrayList<TraceEntry> followingEntries; // Two arraylists to allow for multiple signitures per sys-call
 	private float timestamp;
 	
 	public String getProcessName() {
@@ -27,13 +27,29 @@ public class TraceEntry {
 		this.timestamp = timestamp;
 	}
 	
-	public ArrayList<ArrayList<TraceEntry>> getFollowingEntries(){
+	public ArrayList<TraceEntry> getFollowingEntries(){
 		return followingEntries;
 	}
-	public void add_following_entries(ArrayList<TraceEntry> entries){
-		if(followingEntries == null)
-			followingEntries = new ArrayList<ArrayList<TraceEntry>>();
-		followingEntries.add(entries);
+	
+	public void setFollowingEntries(ArrayList<TraceEntry> entries){
+		followingEntries = entries;
 	}
 	
+	public String toString(){
+		String line = functionName;
+		if(followingEntries!=null){
+			line += ":";
+			for(TraceEntry ent : followingEntries)
+				line += ent.toString()+",";
+		}
+		return line;
+	}
+	
+	public TraceEntry copy(){
+		TraceEntry ent = new TraceEntry();
+		ent.setFunctionName(functionName);
+		ent.setProcessName(processName);
+		ent.setTimestamp(timestamp);
+		return ent;
+	}
 }
