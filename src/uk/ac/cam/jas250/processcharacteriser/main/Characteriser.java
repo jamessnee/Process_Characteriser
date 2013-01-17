@@ -15,6 +15,7 @@ import uk.ac.cam.jas250.processcharacteriser.models.TraceEntry;
 
 public class Characteriser {
 	public void characterise_process(Hashtable<String,String>config){
+		System.out.println("Characterising process: "+config.get("PROCESS_FILTER"));
 		
 		//Parse the file into trace objects
 		InputData_Interface data_input = null;
